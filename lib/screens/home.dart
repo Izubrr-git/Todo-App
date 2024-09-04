@@ -207,7 +207,6 @@ class _HomeState extends State<Home> {
             ),
           ),
           IconButton(icon: const Icon(Icons.menu, color: Colors.white, size: 30), onPressed: () {
-            // TODO
             // TODO Темы оформления
             // TODO Синхронизация с другими устройствами
             // TODO Экспорт/импорт списков задач
