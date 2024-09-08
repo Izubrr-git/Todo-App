@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/todo.dart';
 
 class TaskApiService {
   final String baseUrl = 'http://localhost:8080/api';
+  final String userId;
+
+  TaskApiService(this.userId);
 
   Future<List<ToDo>> getTaskList() async {
-    final url = Uri.parse('$baseUrl/todos');
+    final url = Uri.parse('$baseUrl/users/$userId/todos');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -21,18 +25,15 @@ class TaskApiService {
     }
   }
 
-  void addTask(String taskText) async {
-    // Создание JSON тела запроса
+  Future<bool> addTask(String taskText) async {
     final Map<String, dynamic> requestBody = {
       'taskText': taskText,
       'isDone': false,
     };
 
-    final url = Uri.parse('$baseUrl/todos');
+    final url = Uri.parse('$baseUrl/users/$userId/todos');
 
-    // Выполнение POST-запроса
     try {
-      // Выполнение POST-запроса
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -40,20 +41,20 @@ class TaskApiService {
       );
 
       if (response.statusCode == 201) {
-        // Успешное создание задачи
-        print('Task added successfully!');
+        if (kDebugMode) {
+          print('Task added successfully!');
+        }
+        return true;
       } else {
-        // Ошибка при создании задачи (например, сервер вернул ошибку 4xx или 5xx)
-        print('Failed to add task. Error: ${response.body}');
+        throw Exception('Failed to add task. Error: ${response.body}');
       }
     } catch (e) {
-      // Обработка исключений (например, если URL недоступен)
-      print('Failed to connect to the server. Error: $e');
+      throw Exception('Failed to connect to the server. Error: $e');
     }
   }
 
   Future<bool> deleteTask(String taskId) async {
-    final url = Uri.parse('$baseUrl/todos/$taskId');
+    final url = Uri.parse('$baseUrl/users/$userId/todos/$taskId');
     try {
       final response = await http.delete(url);
       if (response.statusCode == 200) {
@@ -67,7 +68,7 @@ class TaskApiService {
   }
 
   Future<ToDo> updateTask(ToDo todo) async {
-    final url = Uri.parse('$baseUrl/todos/${todo.id}');
+    final url = Uri.parse('$baseUrl/users/$userId/todos/${todo.id}');
     try {
       final response = await http.put(
         url,

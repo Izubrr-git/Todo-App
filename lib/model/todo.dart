@@ -9,7 +9,7 @@ class ToDo {
     this.isDone = false,
   });
 
-  // Метод для создания объекта ToDo из JSON
+  // Метод для создания объекта task из JSON
   factory ToDo.fromJson(Map<String, dynamic> json) {
     return ToDo(
       id: json['id'],

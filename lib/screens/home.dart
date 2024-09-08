@@ -17,20 +17,17 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final todoList = ToDo.todoList();
-  final _taskApiService = TaskApiService();
+  final _taskApiService = TaskApiService("1");
   bool _isAvatarHovered = false;
 
   List<ToDo> _taskList = [];
 
   @override
-  void initState() {
-    super.initState();
-    _taskList = todoList;
-  }
-
-  @override
   Widget build(BuildContext context) {
     _loadTasks();
+    // if(_taskList.isEmpty) {
+    //   _taskList = todoList;
+    // }
     return Scaffold(
       backgroundColor: tdBlue,
       appBar: _buildAppBar(),
@@ -67,8 +64,16 @@ class _HomeState extends State<Home> {
                         )),
                     FloatingActionButton(
                       elevation: 10,
-                      onPressed: () {
-                        showAddTaskDialog(context, _taskApiService.addTask);
+                      onPressed: () async {
+                        try {
+                          String? text = await showAddTaskDialog(context);
+                          if (text != null) {
+                            _addToDoItem(text);
+                            print('Введенный текст: $text');
+                          }
+                        } catch (e) {
+                          throw Exception('Failed to add task. Error: $e');
+                        }
                       },
                       backgroundColor: tdGreen,
                       child: const Icon(
@@ -94,9 +99,10 @@ class _HomeState extends State<Home> {
                       ],
                     ),
                     child: ListView.builder(
-                      itemCount: todoList.length,
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      itemCount: _taskList.length,
                       itemBuilder: (context, index) {
-                        final todo = todoList[todoList.length - 1 - index];
+                        final todo = _taskList[_taskList.length - 1 - index];
                         return TodoItem(
                           todo: todo,
                           onToDoChanged: _handleToDoChange,
@@ -124,6 +130,29 @@ class _HomeState extends State<Home> {
     } catch (e) {
       scaffoldMessengerContext.showSnackBar(
         const SnackBar(content: Text('Ошибка при загрузке задач')),
+      );
+    }
+  }
+
+  Future<void> _addToDoItem(String taskText) async {
+    final scaffoldMessengerContext = ScaffoldMessenger.of(context);
+    try {
+      bool isAdded = await _taskApiService.addTask(taskText);
+      if (isAdded) {
+        setState(() {
+          _taskList.add(taskText as ToDo);
+        });
+        scaffoldMessengerContext.showSnackBar(
+          const SnackBar(content: Text('Задача успешно добавлена')),
+        );
+      }
+    } catch (e) {
+      // Обработка ошибок добавления
+      if (kDebugMode) {
+        print('Error adding task: $e');
+      }
+      scaffoldMessengerContext.showSnackBar(
+        const SnackBar(content: Text('Ошибка при добавлении задачи')),
       );
     }
   }
@@ -206,13 +235,15 @@ class _HomeState extends State<Home> {
                   )),
             ),
           ),
-          IconButton(icon: const Icon(Icons.menu, color: Colors.white, size: 30), onPressed: () {
-            // TODO Темы оформления
-            // TODO Синхронизация с другими устройствами
-            // TODO Экспорт/импорт списков задач
-            // TODO Помощь или руководство пользователя
-            // TODO О приложении / Информация о версии
-          }),
+          IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 30),
+              onPressed: () {
+                // TODO Темы оформления
+                // TODO Синхронизация с другими устройствами
+                // TODO Экспорт/импорт списков задач
+                // TODO Помощь или руководство пользователя
+                // TODO О приложении / Информация о версии
+              }),
         ]),
       ),
     );

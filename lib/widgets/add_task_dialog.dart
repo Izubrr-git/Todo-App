@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AddTaskDialog extends StatefulWidget {
-  final Function addTask;
+  final Function(String)? onAdd;
 
-  const AddTaskDialog({super.key, required this.addTask});
+  const AddTaskDialog({this.onAdd, super.key});
 
   @override
-  _AddTaskDialogState createState() => _AddTaskDialogState();
+  AddTaskDialogState createState() => AddTaskDialogState();
 }
 
-class _AddTaskDialogState extends State<AddTaskDialog> {
+class AddTaskDialogState extends State<AddTaskDialog> {
   final _textFieldController = TextEditingController();
 
   @override
@@ -35,7 +35,9 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
           child: const Text('Add'),
           onPressed: () async {
             if (_textFieldController.text.isNotEmpty) {
-              widget.addTask(_textFieldController.text);
+              if (widget.onAdd != null) {
+                widget.onAdd!(_textFieldController.text);
+              }
               Navigator.of(context).pop();
             }
           },
@@ -45,11 +47,17 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   }
 }
 
-void showAddTaskDialog(BuildContext context, Function addTask) {
-  showDialog(
+Future<String?> showAddTaskDialog(BuildContext context) async {
+  String? result;
+  await showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AddTaskDialog(addTask: addTask);
+      return AddTaskDialog(
+        onAdd: (text) {
+          result = text;
+        },
+      );
     },
   );
+  return result;
 }
